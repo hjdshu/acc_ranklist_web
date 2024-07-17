@@ -1,0 +1,6 @@
+# 设置一个yaml文件，用来配置一些参数
+# 例如：
+port: 9543
+server_path: "/Users/hejia/Documents/github/accresults/testdata/1720693725/"
+files_limit: 100000
+server_name: "Bilibili:RacingJake"
