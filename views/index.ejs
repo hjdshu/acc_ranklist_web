@@ -2,16 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width">
   <title>Lap Times Leaderboard</title>
-  <link rel="stylesheet" href="/style.css">
 </head>
 <style>
+  html{
+    background: #fff;
+  }
   body {
     font-family: Arial, sans-serif;
-    padding: 20px 300px;
+    padding: 20px 20px;
+    margin: 0 auto;
+    width: 1000px;
+    box-sizing: border-box;
   }
-  
+  /* 媒体查询，如果body的宽度小于多少就 */
+  @media (max-width: 600px) {
+    body {
+      width: 780px;
+    }
+  }
   h1, h2 {
     text-align: center;
   }
