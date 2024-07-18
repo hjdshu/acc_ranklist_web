@@ -14,8 +14,7 @@
   "dependencies": {
     "ejs": "^3.1.10",
     "express": "^4.19.2",
-    "js-yaml": "^4.1.0",
-    "rcedit": "^4.0.1"
+    "js-yaml": "^4.1.0"
   },
   "pkg": {
     "targets": [
