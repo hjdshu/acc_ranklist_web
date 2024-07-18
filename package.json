@@ -1,23 +1,30 @@
 {
-  "name": "accresults",
-  "version": "1.0.0",
+  "name": "acc_ranklist_web",
+  "version": "0.0.2",
   "description": "",
   "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node app.js",
-    "build": "pkg app.js --target win"
+    "pkg": "pkg .",
+    "build": "node build.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "ejs": "^3.1.10",
-    "express": "^4.19.2", 
-    "js-yaml": "^4.1.0"
+    "express": "^4.19.2",
+    "js-yaml": "^4.1.0",
+    "rcedit": "^4.0.1"
   },
   "pkg": {
+    "targets": [
+      "win"
+    ],
     "assets": [
       "config.yaml"
-    ]
-  }
+    ],
+    "outputPath": "dist"
+  },
+  "bin": "app.js"
 }
