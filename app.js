@@ -14,21 +14,24 @@ const server_path = config.server_path;
 const port = config.port;
 const results_path = path.join(server_path, "results");
 const filesLimit = config.files_limit || 10000;
-const ejs = require('ejs');
-const renderIndexString = fs.readFileSync(path.join(__dirname, 'views/index.ejs'), 'utf8');
+const ejs = require("ejs");
+const renderIndexString = fs.readFileSync(
+  path.join(__dirname, "views/index.ejs"),
+  "utf8"
+);
 
 // const assetsPath = path.join(__dirname, 'public');
 // app.use(express.static(assetsPath));
 
-
 app.get("/", (req, res) => {
+  const countStartMs = new Date().getTime();
   // res.send("Hello World!");
   // 需要读取results下的所有json文件
   // 使用同步读取
   let files = fs.readdirSync(results_path);
   // 这里循环读取所有的files
   const results = [];
-  // 这里要对files里面的file进行排序，按照时间排序，只取前面1000个
+  // 这里要对files里面的file进行排序，按照时间排序
   files.sort((a, b) => {
     // a和b是两个文件名, 240712_142723_Q.json
     // 240712_142723_Q
@@ -57,7 +60,7 @@ app.get("/", (req, res) => {
       }
     }
   });
-  // 只取前1000个
+  // 只取前xxx个
   files = files.slice(0, filesLimit);
   files.forEach((file) => {
     // 如果file不是json文件，则跳过
@@ -73,39 +76,45 @@ app.get("/", (req, res) => {
     const hour = time.slice(0, 2);
     const minute = time.slice(2, 4);
     const second = time.slice(4, 6);
-    const sessionType = session.slice(0, 1);
+    const sessionType = session.split(".")[0];
     // 读取文件内容
     var filePath = path.join(results_path, file);
     const contentBuffer = fs.readFileSync(filePath);
-    let content = contentBuffer.toString('utf16le');
-    if (content.charCodeAt(0) === 0xFEFF) {
+    let content = contentBuffer.toString("utf16le");
+    if (content.charCodeAt(0) === 0xfeff) {
       content = content.slice(1);
     }
     const jsonObject = JSON.parse(content);
 
     // 先找出车的id
-    let leaderBoardLines = jsonObject.sessionResult.leaderBoardLines
+    let leaderBoardLines = jsonObject.sessionResult.leaderBoardLines;
     leaderBoardLines = leaderBoardLines.map((line) => {
       return {
         carId: line.car.carId,
         carModel: line.car.carModel,
         currentDriverName: line.currentDriver.shortName,
         palyerId: line.currentDriver.playerId,
-        playerFullName: line.currentDriver.firstName + "" + line.currentDriver.lastName,
-      }
+        playerFullName:
+          line.currentDriver.firstName + "" + line.currentDriver.lastName,
+      };
     });
 
     // laps
     let laps = jsonObject.laps;
-    laps = laps.filter(n => n.isValidForBest)
+    laps = laps.filter((n) => n.isValidForBest);
     laps = laps.map((m) => {
       return {
         lapTimeString: formatLapTimeToString(m.laptime),
-        playerFullName: leaderBoardLines.find(n => n.carId === m.carId).playerFullName,
-        carName: globalEnum.cars[leaderBoardLines.find(n => n.carId === m.carId).carModel],
+        playerFullName: leaderBoardLines.find((n) => n.carId === m.carId)
+          .playerFullName,
+        carName:
+          globalEnum.cars[
+            leaderBoardLines.find((n) => n.carId === m.carId).carModel
+          ],
         carId: m.carId,
-        driverName: leaderBoardLines.find(n => n.carId === m.carId).currentDriverName,
-        playerId: leaderBoardLines.find(n => n.carId === m.carId).palyerId,
+        driverName: leaderBoardLines.find((n) => n.carId === m.carId)
+          .currentDriverName,
+        playerId: leaderBoardLines.find((n) => n.carId === m.carId).palyerId,
         laptime: m.laptime,
         splits: m.splits,
         sessionType: sessionType,
@@ -113,9 +122,9 @@ app.get("/", (req, res) => {
         track: jsonObject.trackName,
         splitsString: m.splits.map((split) => {
           return formatLapTimeToString(split);
-        })
-      }
-    })
+        }),
+      };
+    });
     laps = laps.sort((a, b) => {
       return a.laptime - b.laptime;
     });
@@ -178,7 +187,7 @@ app.get("/", (req, res) => {
     trackBestMap[result.track] = personalBestLap;
   });
 
-  const rankList = []
+  const rankList = [];
   for (const key in trackMap) {
     rankList.push({
       track: key,
@@ -194,19 +203,28 @@ app.get("/", (req, res) => {
   //   trackMap: trackMap,
   //   data: rankList
   // });
-  let render = ejs.render(renderIndexString, { data: rankList, serverName: serverNameString });
-  res.send(render)
+  let render = ejs.render(renderIndexString, {
+    data: rankList,
+    serverName: serverNameString,
+  });
+  res.send(render);
+  console.log(`get http://localhost:${port}/ {${new Date().toLocaleString()}} ${new Date().getTime() - countStartMs}ms`);
 });
 
 app.listen(port, () => {
   console.log("server is running on port", port);
 });
 
-function formatLapTimeToString (laptime) {
+function formatLapTimeToString(laptime) {
   // laptime is in milliseconds
   const milliseconds = laptime % 1000;
   // milliseconds不足三位的时候，前面补0
-  const millisecondsString = milliseconds < 10 ? `00${milliseconds}` : milliseconds < 100 ? `0${milliseconds}` : `${milliseconds}`;
+  const millisecondsString =
+    milliseconds < 10
+      ? `00${milliseconds}`
+      : milliseconds < 100
+      ? `0${milliseconds}`
+      : `${milliseconds}`;
   const seconds = Math.floor(laptime / 1000) % 60;
   // seconds不足两位的时候，前面补0
   const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`;

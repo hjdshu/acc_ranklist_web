@@ -57,6 +57,7 @@ const cars = {
 
 const sessionType = {
   0: "Unknown",
+  'FP': "Free Practice",
   'P': "Practice",
   'Q': "Qualifying",
   'R': "Race"
