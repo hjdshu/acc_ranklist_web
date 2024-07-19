@@ -1,6 +1,6 @@
 {
   "name": "acc_ranklist_web",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "src/app.js",
   "scripts": {
@@ -14,7 +14,9 @@
   "dependencies": {
     "ejs": "^3.1.10",
     "express": "^4.19.2",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "pino": "^9.3.1",
+    "pino-pretty": "^11.2.1"
   },
   "pkg": {
     "targets": [

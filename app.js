@@ -4,6 +4,8 @@ const yaml = require("js-yaml");
 const path = require("path");
 const app = express();
 const globalEnum = require("./enum.js");
+const pino = require('pino');
+const pretty = require('pino-pretty');
 // 首先配置results的文件夹路径
 // 读取根目录下的config.yaml文件
 const configPath = path.join(process.cwd(), "config.yaml");
@@ -20,6 +22,7 @@ const renderIndexString = fs.readFileSync(
   "utf8"
 );
 
+const logger = pino(pretty());
 // const assetsPath = path.join(__dirname, 'public');
 // app.use(express.static(assetsPath));
 
@@ -208,11 +211,11 @@ app.get("/", (req, res) => {
     serverName: serverNameString,
   });
   res.send(render);
-  console.log(`get http://localhost:${port}/ {${new Date().toLocaleString()}} ${new Date().getTime() - countStartMs}ms`);
+  logger.info(`get http://localhost:${port}/ ${new Date().getTime() - countStartMs}ms`);
 });
 
 app.listen(port, () => {
-  console.log("server is running on port", port);
+  logger.info("server is running on port: " + port);
 });
 
 function formatLapTimeToString(laptime) {
