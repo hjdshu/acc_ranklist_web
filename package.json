@@ -20,10 +20,12 @@
   },
   "pkg": {
     "targets": [
-      "win"
+      "win",
+      "node18-macos-x64"
     ],
     "assets": [
-      "config.yaml"
+      "public/**/*",
+      "views/**/*"
     ],
     "outputPath": "dist"
   },

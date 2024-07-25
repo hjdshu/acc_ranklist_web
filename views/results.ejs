@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./../public.css">
+  <title>Session Data</title>
+  <style>
+    /* body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    } */
+    /* .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    } */
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+        <a href="/" class="home">Home</a>
+        <a href="/results/">Results</a>
+        <a href="/about.html" class="about">About</a>
+    </div>
+    <h1>ACC Server Session Data</h1>
+    <% data.forEach(session => { %>
+      <h2>Track: <%= session.trackName.toUpperCase() %> - Session: <%= session.sessionType %></h2>
+      <p>Date: <%= session.dateTime %></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>totalTime</th>
+            <th>bestLap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% session.currentDriver.forEach(driver => { %>
+            <tr>
+              <td><%= driver.rank %></td>
+              <td><%= driver.firstName %></td>
+              <td><%= driver.lastName %></td>
+              <td><%= driver.totalTime %></td>
+              <td><%= driver.bestLap %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% }) %>
+  </div>
+</body>
+</html>

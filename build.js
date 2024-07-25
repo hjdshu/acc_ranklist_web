@@ -5,10 +5,10 @@ const fs = require('fs');
 const build = () => {
     const buildCommand = `npm run pkg`;
     execSync(buildCommand, { stdio: 'inherit' });
-    const outputPath = path.join(__dirname, 'dist', `${packageJson.name}.exe`);
+    const outputPath = path.join(__dirname, 'dist', `${packageJson.name}-win.exe`);
     // rename the exe file, add the version number
     const version = packageJson.version;
-    const newOutputPath = path.join(__dirname, 'dist', `${packageJson.name}-v${version}.exe`);
+    const newOutputPath = path.join(__dirname, 'dist', `${packageJson.name}-v${version}-win.exe`);
     fs.renameSync(outputPath, newOutputPath);
     // copy the config.yaml file to the dist folder 
     const configPath = path.join(__dirname, 'config.yaml');

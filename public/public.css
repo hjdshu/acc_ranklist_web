@@ -1,0 +1,31 @@
+.nav {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+}
+.h1 {
+  padding-top: 20px;
+}
+.nav a {
+  margin-left: 20px;
+}
+
+html {
+  background: #f4f4f4;
+}
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px 20px;
+  margin: 0 auto;
+  width: 1200px;
+  box-sizing: border-box;
+  position: relative;
+  background: #fff;
+  min-height: 100vh;
+}
+/* 媒体查询，如果body的宽度小于多少就 */
+@media (max-width: 600px) {
+  body {
+    width: 780px;
+  }
+}

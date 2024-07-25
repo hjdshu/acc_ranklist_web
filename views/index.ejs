@@ -3,47 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="./public.css">
+  <link rel="stylesheet" href="./style.css">
   <title>Lap Times Leaderboard</title>
 </head>
-<style>
-  html{
-    background: #fff;
-  }
-  body {
-    font-family: Arial, sans-serif;
-    padding: 20px 20px;
-    margin: 0 auto;
-    width: 1200px;
-    box-sizing: border-box;
-  }
-  /* 媒体查询，如果body的宽度小于多少就 */
-  @media (max-width: 600px) {
-    body {
-      width: 780px;
-    }
-  }
-  h1, h2 {
-    text-align: center;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  th {
-    background-color: #f4f4f4;
-  }
-</style>
 <body>
-  <h1><%= serverName %> ACC Server Lap Leaderboard</h1>
+  <div class="nav">
+    <a href="./" class="home">Home</a>
+    <a href="./results/">Results</a>
+    <a href="./about.html" class="about">About</a>
+  </div>
+  <h1 class="h1"><%= serverName %> ACC Server Lap Leaderboard</h1>
   <br>
   <% data.forEach(trackData => { %>
     <h2>Track: <%= trackData.track.toUpperCase() %></h2>
@@ -80,3 +50,4 @@
   <% }) %>
 </body>
 </html>
+ 
