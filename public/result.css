@@ -1,0 +1,14 @@
+.resultItem{
+    margin-bottom: 50px;
+}
+.resultItem h2{
+    font-size: 16px;
+    margin: 0;
+    font-weight: normal;
+}
+.resultItem .date{
+    color: #000000;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}

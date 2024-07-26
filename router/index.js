@@ -23,6 +23,9 @@ router.get("/", (req, res) => {
   const countStartMs = new Date().getTime();
   const results = [];
   const files = readResultsFiles();
+  const userLapCountsMap = {
+  };
+
   files.forEach((file) => {
     // 如果file不是json文件，则跳过
     if (!file.endsWith(".json")) {
@@ -62,6 +65,15 @@ router.get("/", (req, res) => {
 
     // laps
     let laps = jsonObject.laps;
+    laps.forEach((lap) => {
+      let playerId  = leaderBoardLines.find((n) => n.carId === lap.carId).palyerId
+      let track = jsonObject.trackName
+      if (!userLapCountsMap[playerId + '-' + track]) {
+        userLapCountsMap[playerId + '-' + track] = 0
+      }
+      userLapCountsMap[playerId + '-' + track] += 1
+    });
+
     laps = laps.filter((n) => n.isValidForBest);
     laps = laps.map((m) => {
       return {
@@ -101,6 +113,7 @@ router.get("/", (req, res) => {
           personalBestLapMap[lap.playerId] = lap;
         }
       }
+      personalBestLapMap[lap.playerId].lapCount = userLapCountsMap[lap.playerId + '-' + lap.track]
     });
     for (const key in personalBestLapMap) {
       personalBestLap.push(personalBestLapMap[key]);
@@ -171,20 +184,44 @@ router.get("/results/", (req, res) => {
     if (!file.endsWith(".json")) {
       return;
     }
-    const {dateTime, sessionType, jsonObject} = redJsonFile(file);
-    results.push({
-      dateTime: dateTime,
-      sessionType: sessionType,
-      trackName: jsonObject.trackName,
-      currentDriver: jsonObject.sessionResult.leaderBoardLines.map((line, index) => {
+    const { dateTime, sessionType, jsonObject } = redJsonFile(file);
+    let currentDriver = jsonObject.sessionResult.leaderBoardLines.map(
+      (line, index) => {
         return {
           ...line.currentDriver,
-          rank: index+1,
-          bestLap: line.timing.bestLap !== 2147483647 ? formatLapTimeToString(line.timing.bestLap) : "--",
-          totalTime: line.driverTotalTimes
-        }
-      })
-    });
+          rank: index + 1,
+          bestLap:
+            line.timing.bestLap !== 2147483647
+              ? formatLapTimeToString(line.timing.bestLap)
+              : "--",
+          totalTime: formatLapTimeToString(line.driverTotalTimes),
+          totalTimeNumber: Math.floor(line.driverTotalTimes),
+          laps: line.timing.lapCount,
+        };
+      }
+    );
+    if (currentDriver.length) {
+      let first = currentDriver[0];
+      let firstLaps = first.laps;
+      let firstTotalTime = first.totalTimeNumber;
+      currentDriver = currentDriver.map((driver) => {
+        return {
+          ...driver,
+          gapTime:
+            driver.laps == firstLaps
+              ? '+' + formatLapTimeToString(driver.totalTimeNumber - firstTotalTime) 
+              : ("+" + (firstLaps - driver.laps) + " Lap"),
+        };
+      });
+    }
+    if (currentDriver.length) {
+      results.push({
+        dateTime: dateTime,
+        sessionType: sessionType,
+        trackName: jsonObject.trackName,
+        currentDriver: currentDriver,
+      });
+    }
   });
   // res.send(results);
   res.render("results", {
@@ -192,7 +229,8 @@ router.get("/results/", (req, res) => {
   });
 });
 
-function formatLapTimeToString(laptime) {
+function formatLapTimeToString(lapTimeFloor, isHour = false) {
+  const laptime = Math.floor(lapTimeFloor);
   // laptime is in milliseconds
   const milliseconds = laptime % 1000;
   // milliseconds不足三位的时候，前面补0
@@ -205,8 +243,14 @@ function formatLapTimeToString(laptime) {
   const seconds = Math.floor(laptime / 1000) % 60;
   // seconds不足两位的时候，前面补0
   const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`;
-  const minutes = Math.floor(laptime / 60000);
-  return `${minutes}:${secondsString}.${millisecondsString}`;
+  if (!isHour) {
+    const minutes = Math.floor(laptime / 60000);
+    return `${minutes}:${secondsString}.${millisecondsString}`;
+  } else {
+    const minutes = Math.floor(laptime / 60000) % 60;
+    const hours = Math.floor(laptime / 3600000);
+    return `${hours}:${minutes}:${secondsString}.${millisecondsString}`;
+  }
 }
 
 // 批量读取文件
@@ -274,7 +318,7 @@ function redJsonFile(file) {
     minute,
     second,
     sessionType: sessionType,
-    jsonObject: jsonObject
+    jsonObject: jsonObject,
   };
 }
 
