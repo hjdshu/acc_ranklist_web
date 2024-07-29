@@ -29,3 +29,12 @@ body {
     width: 780px;
   }
 }
+.best{
+  color: rgb(160, 3, 204);
+}
+.rankimg{
+  width: 30px;
+}
+.rankcenter{
+  text-align: center;
+}

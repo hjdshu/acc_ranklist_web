@@ -13,43 +13,83 @@
     <a href="./results/">Results</a>
     <a href="./about.html" class="about">About</a>
   </div>
+  
   <h1 class="h1"><%= serverName %> ACC Server Lap Leaderboard</h1>
+  
+  <label for="trackSelect">Select Track: </label>
+  <select id="trackSelect">
+    <option value="all">All</option>
+    <% data.forEach(trackData => { %>
+      <option value="<%= trackData.track %>"><%= trackData.track.toUpperCase() %></option>
+    <% }) %>
+  </select>
+  
   <br>
+  
   <% data.forEach(trackData => { %>
-    <h2>Track: <%= trackData.track.toUpperCase() %></h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Player Name</th>
-          <th>Car</th>
-          <th>Best Lap Time</th>
-          <th>s1</th>
-          <th>s2</th>
-          <th>s3</th>
-          <th>laps</th>
-          <th>Session Type</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% trackData.personalBestLap.forEach((lap, index) => { %>
+    <div class="trackData" data-track="<%= trackData.track %>">
+      <h2>Track: <%= trackData.track.toUpperCase() %></h2>
+      <table>
+        <thead>
           <tr>
-            <td><%= index+1 %></td>
-            <td><%= lap.playerFullName %></td>
-            <td><%= lap.carName %></td>
-            <td><%= lap.lapTimeString %></td>
-            <td><%= lap.splitsString[0] %></td>
-            <td><%= lap.splitsString[1] %></td>
-            <td><%= lap.splitsString[2] %></td>
-            <td><%= lap.lapCount %></td>
-            <td><%= lap.sessionType %></td>
-            <td><%= lap.dateTime %></td>
+            <th>Rank</th>
+            <th>Driver</th>
+            <th>Car</th>
+            <th>Best Lap Time</th>
+            <th>s1</th>
+            <th>s2</th>
+            <th>s3</th>
+            <th>laps</th>
+            <th>Session Type</th>
+            <th>Date</th>
           </tr>
-        <% }) %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% trackData.personalBestLap.forEach((lap, index) => { %>
+            <tr>
+              <td class="rankcenter">
+                <% if (index > 2) { %>
+                  <%= index + 1 %>
+                <% } %>
+                <% if (index == 0) { %>
+                  <img class="rankimg" src="./images/r1.png" alt="">
+                <% } %>
+                <% if (index == 1) { %>
+                  <img class="rankimg" src="./images/r2.png" alt="">
+                <% } %>
+                <% if (index == 2) { %>
+                  <img class="rankimg" src="./images/r3.png" alt="">
+                <% } %>
+              </td>
+              <td><%= lap.playerFullName %><span style="display: none;"><%= lap.playerId %></span></td>
+              <td><%= lap.carName %></td>
+              <td <% if (index == 0) { %>class="best"<% } %> ><%= lap.lapTimeString %></td>
+              <td <% if (lap.s1Best == true) { %>class="best"<% } %> ><%= lap.splitsString[0] %></td>
+              <td <% if (lap.s2Best == true) { %>class="best"<% } %>><%= lap.splitsString[1] %></td>
+              <td <% if (lap.s3Best == true) { %>class="best"<% } %>><%= lap.splitsString[2] %></td>
+              <td><%= lap.lapCount %></td>
+              <td><%= lap.sessionType %></td>
+              <td><%= lap.dateTime %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
   <% }) %>
+  
+  <script>
+    document.getElementById('trackSelect').addEventListener('change', function() {
+      var selectedTrack = this.value;
+      var trackDataDivs = document.querySelectorAll('.trackData');
+      
+      trackDataDivs.forEach(function(div) {
+        if (selectedTrack === 'all' || div.getAttribute('data-track') === selectedTrack) {
+          div.style.display = '';
+        } else {
+          div.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
- 

@@ -23,8 +23,7 @@ router.get("/", (req, res) => {
   const countStartMs = new Date().getTime();
   const results = [];
   const files = readResultsFiles();
-  const userLapCountsMap = {
-  };
+  const userLapCountsMap = {};
 
   files.forEach((file) => {
     // 如果file不是json文件，则跳过
@@ -32,7 +31,6 @@ router.get("/", (req, res) => {
       return;
     }
     // 从file文件中解析出日期
-    // 240712_142723_Q
     const [date, time, session] = file.split("_");
     const year = date.slice(0, 2);
     const month = date.slice(2, 4);
@@ -50,7 +48,7 @@ router.get("/", (req, res) => {
     }
     const jsonObject = JSON.parse(content);
 
-    // 先找出车的id
+    // 先找出车id，车型，当前车手
     let leaderBoardLines = jsonObject.sessionResult.leaderBoardLines;
     leaderBoardLines = leaderBoardLines.map((line) => {
       return {
@@ -59,22 +57,25 @@ router.get("/", (req, res) => {
         currentDriverName: line.currentDriver.shortName,
         palyerId: line.currentDriver.playerId,
         playerFullName:
-          line.currentDriver.firstName + "" + line.currentDriver.lastName,
+          line.currentDriver.firstName + " " + line.currentDriver.lastName,
       };
     });
 
-    // laps
     let laps = jsonObject.laps;
+    // 记录每个人在这个track上的圈数
     laps.forEach((lap) => {
-      let playerId  = leaderBoardLines.find((n) => n.carId === lap.carId).palyerId
-      let track = jsonObject.trackName
-      if (!userLapCountsMap[playerId + '-' + track]) {
-        userLapCountsMap[playerId + '-' + track] = 0
+      let playerId = leaderBoardLines.find(
+        (n) => n.carId === lap.carId
+      ).palyerId;
+      let track = jsonObject.trackName;
+      if (!userLapCountsMap[playerId + "-" + track]) {
+        userLapCountsMap[playerId + "-" + track] = 0;
       }
-      userLapCountsMap[playerId + '-' + track] += 1
+      userLapCountsMap[playerId + "-" + track] += 1;
     });
-
+    // 过滤掉无效的lap
     laps = laps.filter((n) => n.isValidForBest);
+    // 给laps加上playerFullName, carName, carId, driverName, playerId
     laps = laps.map((m) => {
       return {
         lapTimeString: formatLapTimeToString(m.laptime),
@@ -98,6 +99,7 @@ router.get("/", (req, res) => {
         }),
       };
     });
+    // 按照laptime进行排序
     laps = laps.sort((a, b) => {
       return a.laptime - b.laptime;
     });
@@ -113,11 +115,13 @@ router.get("/", (req, res) => {
           personalBestLapMap[lap.playerId] = lap;
         }
       }
-      personalBestLapMap[lap.playerId].lapCount = userLapCountsMap[lap.playerId + '-' + lap.track]
+      personalBestLapMap[lap.playerId].lapCount =
+        userLapCountsMap[lap.playerId + "-" + lap.track];
     });
     for (const key in personalBestLapMap) {
       personalBestLap.push(personalBestLapMap[key]);
     }
+    // 如果laps不为空，就把这个结果加入到results里面
     if (laps.length != 0) {
       results.push({
         dateTime: `20${year}-${month}-${day} ${hour}:${minute}:${second}`,
@@ -160,7 +164,54 @@ router.get("/", (req, res) => {
     trackMap[result.track] = trackMap[result.track];
     trackBestMap[result.track] = personalBestLap;
   });
-
+  // 对每一条赛道的成绩进行s1，s2，s3的排序
+  for (const key in trackBestMap) {
+    const track = trackBestMap[key];
+    let s1BestLap = 0;
+    let s1BestIndex = -1;
+    let s2BestLap = 0;
+    let s2BestIndex = -1;
+    let s3BestLap = 0;
+    let s3BestIndex = -1;
+    track.forEach((lap, index) => {
+      if (!s1BestLap) {
+        s1BestLap = lap.splits[0];
+        s1BestIndex = index;
+        track[index].s1Best = true;
+      } else {
+        if (lap.splits[0] < s1BestLap) {
+          s1BestLap = lap.splits[0];
+          track[s1BestIndex].s1Best = false;
+          track[index].s1Best = true;
+          s1BestIndex = index;
+        }
+      }
+      if (!s2BestLap) {
+        s2BestLap = lap.splits[1];
+        s2BestIndex = index;
+        track[index].s2Best = true;
+      } else {
+        if (lap.splits[1] < s2BestLap) {
+          s2BestLap = lap.splits[1];
+          track[s2BestIndex].s2Best = false;
+          track[index].s2Best = true;
+          s2BestIndex = index;
+        }
+      }
+      if (!s3BestLap) {
+        s3BestLap = lap.splits[2];
+        s3BestIndex = index;
+        track[index].s3Best = true;
+      } else {
+        if (lap.splits[2] < s3BestLap) {
+          s3BestLap = lap.splits[2];
+          track[s3BestIndex].s3Best = false;
+          track[index].s3Best = true;
+          s3BestIndex = index;
+        }
+      }
+    });
+  }
   const rankList = [];
   for (const key in trackMap) {
     rankList.push({
@@ -168,6 +219,7 @@ router.get("/", (req, res) => {
       personalBestLap: trackBestMap[key],
     });
   }
+  // res.send(rankList);
   res.render("index", {
     data: rankList,
     serverName: serverNameString,
@@ -194,6 +246,10 @@ router.get("/results/", (req, res) => {
             line.timing.bestLap !== 2147483647
               ? formatLapTimeToString(line.timing.bestLap)
               : "--",
+          bestSplits: line.timing.bestSplits,
+          bestSplitsString: line.timing.bestSplits.map((split) => {
+            return formatLapTimeToString(split);
+          }),
           totalTime: formatLapTimeToString(line.driverTotalTimes),
           totalTimeNumber: Math.floor(line.driverTotalTimes),
           laps: line.timing.lapCount,
@@ -209,8 +265,9 @@ router.get("/results/", (req, res) => {
           ...driver,
           gapTime:
             driver.laps == firstLaps
-              ? '+' + formatLapTimeToString(driver.totalTimeNumber - firstTotalTime) 
-              : ("+" + (firstLaps - driver.laps) + " Lap"),
+              ? "+" +
+                formatLapTimeToString(driver.totalTimeNumber - firstTotalTime)
+              : "+" + (firstLaps - driver.laps) + " Lap",
         };
       });
     }
@@ -222,6 +279,53 @@ router.get("/results/", (req, res) => {
         currentDriver: currentDriver,
       });
     }
+  });
+  results.forEach((track) => {
+    // 需要把result里面bestLap和bestSplitsString进行排序
+    let s1BestLap = 0;
+    let s1BestIndex = -1;
+    let s2BestLap = 0;
+    let s2BestIndex = -1;
+    let s3BestLap = 0;
+    let s3BestIndex = -1;
+    track.currentDriver.forEach((lap, index) => {
+      if (!s1BestLap) {
+        s1BestLap = lap.bestSplits[0];
+        s1BestIndex = index;
+        lap.s1Best = true;
+      } else {
+        if (lap.bestSplits[0] < s1BestLap) {
+          s1BestLap = lap.bestSplits[0];
+          track.currentDriver[s1BestIndex].s1Best = false;
+          lap.s1Best = true;
+          s1BestIndex = index;
+        }
+      }
+      if (!s2BestLap) {
+        s2BestLap = lap.bestSplits[1];
+        s2BestIndex = index;
+        lap.s2Best = true;
+      } else {
+        if (lap.bestSplits[1] < s2BestLap) {
+          s2BestLap = lap.bestSplits[1];
+          track.currentDriver[s2BestIndex].s2Best = false;
+          lap.s2Best = true;
+          s2BestIndex = index;
+        }
+      }
+      if (!s3BestLap) {
+        s3BestLap = lap.bestSplits[2];
+        s3BestIndex = index;
+        lap.s3Best = true;
+      } else {
+        if (lap.bestSplits[2] < s3BestLap) {
+          s3BestLap = lap.bestSplits[2];
+          track.currentDriver[s3BestIndex].s3Best = false;
+          lap.s3Best = true;
+          s3BestIndex = index;
+        }
+      }
+    })
   });
   // res.send(results);
   res.render("results", {
