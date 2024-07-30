@@ -32,3 +32,12 @@ th {
 }
 .about {
 }
+.filter-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.filter-container select,
+.filter-container input {
+  padding: 5px;
+  margin: 0 5px;
+}

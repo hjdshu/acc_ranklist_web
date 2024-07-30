@@ -1,197 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="./../public.css" />
-    <link rel="stylesheet" href="./../result.css" />
-    <title>Session Data</title>
-    <style>
-      h1 {
-        text-align: center;
-        color: #333;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-      }
-      table,
-      th,
-      td {
-        border: 1px solid #ddd;
-      }
-      th,
-      td {
-        padding: 8px;
-        text-align: left;
-      }
-      th {
-        background-color: #f2f2f2;
-      }
-      .filter-container {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .filter-container select,
-      .filter-container input {
-        padding: 5px;
-        margin: 0 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="nav">
-        <a href="/" class="home">Home</a>
-        <a href="/results/">Results</a>
-        <a href="/about.html" class="about">About</a>
-      </div>
-      <h1>ACC Server Session Data</h1>
-      <div class="filter-container">
-        <label for="sessionTypeFilter">Filter by session type: </label>
-        <select id="sessionTypeFilter" onchange="filterSessions()">
-          <option value="all">All</option>
-          <option value="Q">Q</option>
-          <option value="R">R</option>
-          <option value="FP">FP</option>
-        </select>
-        <label for="trackNameFilter">Filter by track name: </label>
-        <select id="trackNameFilter" onchange="filterSessions()">
-          <!-- Track names will be dynamically populated -->
-        </select>
-        <label for="startDateFilter">Start date: </label>
-        <input type="date" id="startDateFilter" onchange="filterSessions()">
-        <label for="endDateFilter">End date: </label>
-        <input type="date" id="endDateFilter" onchange="filterSessions()">
-      </div>
-      <div id="sessionsContainer">
-        <% data.forEach(session => { %>
-        <div
-          class="resultItem"
-          data-session-type="<%= session.sessionType %>"
-          data-track-name="<%= session.trackName %>"
-          data-date="<%= session.dateTime %>"
-        >
-          <p class="date">Date: <%= session.dateTime %></p>
-          <h2>
-            Track: <b><%= session.trackName.toUpperCase() %></b> - Session: <%=
-            session.sessionType %>
-          </h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Driver</th>
-                <% if (session.sessionType === 'R') { %>
-                <th>Total Time</th>
-                <th>Gap Time</th>
-                <th>Total Laps</th>
-                <% } %>
-                <th>Best Lap</th>
-                <th>BestlapS1</th>
-                <th>BestlapS2</th>
-                <th>BestlapS3</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% session.currentDriver.forEach((driver,index) => { %>
-              <tr>
-                <td class="rankcenter">
-                  <% if (index>2) { %>
-                    <%= index+1 %>
-                  <% } %>
-                  <% if (index==0) { %>
-                    <img class="rankimg" src="../images/r1.png" alt="">
-                  <% } %>
-                  <% if (index==1) { %>
-                    <img class="rankimg" src="../images/r2.png" alt="">
-                  <% } %>
-                  <% if (index==2) { %>
-                    <img class="rankimg" src="../images/r3.png" alt="">
-                  <% } %>
-                </td>
-                <td><%= driver.firstName %> <%= driver.lastName %></td>
-                <% if (session.sessionType === 'R') { %>
-                <td><%= driver.totalTime %></td>
-                <td><%= driver.gapTime %></td>
-                <td><%= driver.laps %></td>
-                <% } %>
-                <td <% if (index == 0) { %>class="best"<% } %> ><%= driver.bestLap %></td>
-                <td <% if (driver.s1Best == true) { %>class="best"<% } %> ><%= driver.bestLap != '--' ? driver.bestSplitsString[0]: '--' %></td>
-                <td <% if (driver.s2Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[1]: '--' %></td>
-                <td <% if (driver.s3Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[2]: '--' %></td>
-              </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <% }) %>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="./../public.css" />
+  <link rel="stylesheet" href="./../result.css" />
+  <title>Session Data</title>
+  <style>
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    table,
+    th,
+    td {
+      border: 1px solid #ddd;
+    }
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .filter-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .filter-container select,
+    .filter-container input {
+      padding: 5px;
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <a href="/" class="home">Home</a>
+      <a href="/results/">Results</a>
+      <a href="/about.html" class="about">About</a>
     </div>
+    <h1 class="h1"><a href="../results/">ACC Server Session Data</a></h1>
+    <div class="filter-container">
+      <label for="sessionTypeFilter">Filter by session type: </label>
+      <select id="sessionTypeFilter" onchange="filterSessions()">
+        <option value="all">All</option>
+        <option value="Q">Q</option>
+        <option value="R">R</option>
+        <option value="FP">FP</option>
+      </select>
+      <label for="trackNameFilter">Filter by track name: </label>
+      <select id="trackNameFilter" onchange="filterSessions()">
+        <!-- Track names will be dynamically populated -->
+      </select>
+      <label for="startDateFilter">Start date: </label>
+      <select id="startDateFilter" onchange="filterSessions()">
+        <!-- Start dates will be dynamically populated -->
+      </select>
+      <label for="endDateFilter">End date: </label>
+      <select id="endDateFilter" onchange="filterSessions()">
+        <!-- End dates will be dynamically populated -->
+      </select>
+      <span>filesLimit: <%= filesLimit %></span>
+    </div>
+    <div id="sessionsContainer">
+      <% data.forEach(session => { %>
+      <div
+        class="resultItem"
+        data-session-type="<%= session.sessionType %>"
+        data-track-name="<%= session.trackName %>"
+        data-date="<%= session.dateTime %>"
+      >
+        <p class="date">Date: <%= session.dateTime %></p>
+        <h2>
+          Track: <b><%= session.trackName.toUpperCase() %></b> - Session: <%=
+          session.sessionType %>
+        </h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Driver</th>
+              <% if (session.sessionType === 'R') { %>
+              <th>Total Time</th>
+              <th>Gap Time</th>
+              <th>Total Laps</th>
+              <% } %>
+              <th>Best Lap</th>
+              <th>BestlapS1</th>
+              <th>BestlapS2</th>
+              <th>BestlapS3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% session.currentDriver.forEach((driver,index) => { %>
+            <tr>
+              <td class="rankcenter">
+                <% if (index>2) { %>
+                  <%= index+1 %>
+                <% } %>
+                <% if (index==0) { %>
+                  <img class="rankimg" src="../images/r1.png" alt="">
+                <% } %>
+                <% if (index==1) { %>
+                  <img class="rankimg" src="../images/r2.png" alt="">
+                <% } %>
+                <% if (index==2) { %>
+                  <img class="rankimg" src="../images/r3.png" alt="">
+                <% } %>
+              </td>
+              <td><%= driver.firstName %> <%= driver.lastName %><span style="display: none;"><%= driver.playerId %></span></td>
+              <% if (session.sessionType === 'R') { %>
+              <td><%= driver.totalTime %></td>
+              <td><%= driver.gapTime %></td>
+              <td><%= driver.laps %></td>
+              <% } %>
+              <td <% if (index == 0) { %>class="best"<% } %> ><%= driver.bestLap %></td>
+              <td <% if (driver.s1Best == true) { %>class="best"<% } %> ><%= driver.bestLap != '--' ? driver.bestSplitsString[0]: '--' %></td>
+              <td <% if (driver.s2Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[1]: '--' %></td>
+              <td <% if (driver.s3Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[2]: '--' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% }) %>
+    </div>
+  </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        populateTrackNames();
-        document.getElementById("sessionTypeFilter").value = 'R';
-        filterSessions();
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      populateTrackNames();
+      populateDates();
+      document.getElementById("sessionTypeFilter").value = 'R';
+      filterSessions();
+    });
+
+    function populateTrackNames() {
+      const trackNames = new Set();
+      const sessions = document.querySelectorAll(".resultItem");
+
+      sessions.forEach((session) => {
+        trackNames.add(session.getAttribute("data-track-name"));
       });
 
-      function populateTrackNames() {
-        const trackNames = new Set();
-        const sessions = document.querySelectorAll(".resultItem");
+      const trackNameFilter = document.getElementById("trackNameFilter");
+      // Add an "All" option at the beginning
+      const allOption = document.createElement("option");
+      allOption.value = "all";
+      allOption.textContent = "All";
+      trackNameFilter.insertBefore(allOption, trackNameFilter.firstChild);
+      trackNames.forEach((trackName) => {
+        const option = document.createElement("option");
+        option.value = trackName;
+        option.textContent = trackName;
+        trackNameFilter.appendChild(option);
+      });
+    }
 
-        sessions.forEach((session) => {
-          trackNames.add(session.getAttribute("data-track-name"));
-        });
+    function populateDates() {
+      const startDateSet = new Set();
+      const endDateSet = new Set();
+      const sessions = document.querySelectorAll(".resultItem");
 
-        const trackNameFilter = document.getElementById("trackNameFilter");
-        // Add an "All" option at the beginning
-        const allOption = document.createElement("option");
-        allOption.value = "all";
-        allOption.textContent = "All";
-        trackNameFilter.insertBefore(allOption, trackNameFilter.firstChild);
-        trackNames.forEach((trackName) => {
-          const option = document.createElement("option");
-          option.value = trackName;
-          option.textContent = trackName;
-          trackNameFilter.appendChild(option);
-        });
-      }
+      sessions.forEach((session) => {
+        const sessionDate = session.getAttribute("data-date").split(" ")[0];
+        startDateSet.add(sessionDate);
+        endDateSet.add(sessionDate);
+      });
 
-      function filterSessions() {
-        const sessionTypeFilter = document.getElementById("sessionTypeFilter").value;
-        const trackNameFilter = document.getElementById("trackNameFilter").value;
-        const startDateFilter = document.getElementById("startDateFilter").value;
-        const endDateFilter = document.getElementById("endDateFilter").value;
-        const sessions = document.querySelectorAll(".resultItem");
+      populateSelect(document.getElementById("startDateFilter"), startDateSet);
+      populateSelect(document.getElementById("endDateFilter"), endDateSet);
+    }
 
-        sessions.forEach((session) => {
-          const sessionType = session.getAttribute("data-session-type");
-          const trackName = session.getAttribute("data-track-name");
-          const sessionDate = session.getAttribute("data-date");
+    function populateSelect(selectElement, valuesSet) {
+      // Clear the existing options
+      selectElement.innerHTML = '';
 
-          let showSession = true;
+      // Add an "All" option at the beginning
+      const allOption = document.createElement("option");
+      allOption.value = "all";
+      allOption.textContent = "Select Date";
+      selectElement.appendChild(allOption);
 
-          if (sessionTypeFilter !== "all" && sessionType !== sessionTypeFilter) {
-            showSession = false;
-          }
+      // Add options from the set
+      valuesSet.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        selectElement.appendChild(option);
+      });
+    }
 
-          if (trackNameFilter !== "all" && trackName !== trackNameFilter) {
-            showSession = false;
-          }
+    function filterSessions() {
+      const sessionTypeFilter = document.getElementById("sessionTypeFilter").value;
+      const trackNameFilter = document.getElementById("trackNameFilter").value;
+      const startDateFilter = document.getElementById("startDateFilter").value;
+      const endDateFilter = document.getElementById("endDateFilter").value;
+      const sessions = document.querySelectorAll(".resultItem");
 
-          if (startDateFilter && new Date(sessionDate) < new Date(startDateFilter)) {
-            showSession = false;
-          }
+      sessions.forEach((session) => {
+        const sessionType = session.getAttribute("data-session-type");
+        const trackName = session.getAttribute("data-track-name");
+        const sessionDate = session.getAttribute("data-date").split(" ")[0];
 
-          if (endDateFilter && new Date(sessionDate) > new Date(endDateFilter)) {
-            showSession = false;
-          }
+        let showSession = true;
 
-          session.style.display = showSession ? "" : "none";
-        });
-      }
-    </script>
-  </body>
+        if (sessionTypeFilter !== "all" && sessionType !== sessionTypeFilter) {
+          showSession = false;
+        }
+
+        if (trackNameFilter !== "all" && trackName !== trackNameFilter) {
+          showSession = false;
+        }
+
+        if (startDateFilter !== "all" && sessionDate < startDateFilter) {
+          showSession = false;
+        }
+
+        if (endDateFilter !== "all" && sessionDate > endDateFilter) {
+          showSession = false;
+        }
+
+        session.style.display = showSession ? "" : "none";
+      });
+    }
+  </script>
+</body>
 </html>

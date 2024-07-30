@@ -14,16 +14,25 @@
     <a href="./about.html" class="about">About</a>
   </div>
   
-  <h1 class="h1"><%= serverName %> ACC Server Lap Leaderboard</h1>
-  
-  <label for="trackSelect">Select Track: </label>
-  <select id="trackSelect">
-    <option value="all">All</option>
-    <% data.forEach(trackData => { %>
-      <option value="<%= trackData.track %>"><%= trackData.track.toUpperCase() %></option>
-    <% }) %>
-  </select>
-  
+  <h1 class="h1"><a href="./"><%= serverName %>ACC Server Lap Leaderboard</a></h1>
+  <div class="filter-container">
+    <label for="trackSelect">Select Track: </label>
+    <select id="trackSelect">
+      <option value="all">All</option>
+      <% data.forEach(trackData => { %>
+        <option value="<%= trackData.track %>"><%= trackData.track.toUpperCase() %></option>
+      <% }) %>
+    </select>
+    <label for="startDateFilter">Start date: </label>
+    <select id="startDateFilter" onchange="filterSessions()">
+      <!-- Start dates will be dynamically populated -->
+    </select>
+    <label for="endDateFilter">End date: </label>
+    <select id="endDateFilter" onchange="filterSessions()">
+      <!-- End dates will be dynamically populated -->
+    </select>
+    <span>filesLimit: <%= filesLimit %></span>
+  </div>
   <br>
   
   <% data.forEach(trackData => { %>
@@ -76,7 +85,11 @@
       </table>
     </div>
   <% }) %>
-  
+
+  <script>
+    var dateList = <%- JSON.stringify(dateList) %>;
+  </script>
+
   <script>
     document.getElementById('trackSelect').addEventListener('change', function() {
       var selectedTrack = this.value;
@@ -90,6 +103,47 @@
         }
       });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      populateSelect(document.getElementById('startDateFilter'), dateList);
+      populateSelect(document.getElementById('endDateFilter'), dateList);
+    });
+
+    function populateSelect(selectElement, valuesSet) {
+      // Clear the existing options
+      selectElement.innerHTML = '';
+
+      // Add an "All" option at the beginning
+      const allOption = document.createElement("option");
+      allOption.value = "all";
+      allOption.textContent = "Select Date";
+      selectElement.appendChild(allOption);
+
+      // Add options from the set
+      valuesSet.forEach(value => {
+        const option = document.createElement("option");
+        option.value = value.year + '-' + value.month + '-' + value.day;
+        option.textContent = value.year + '-' + value.month + '-' + value.day;
+        selectElement.appendChild(option);
+      });
+      // Set the default value to the last date
+      // 判断url query当中的startDate 和 endDate
+      const urlParams = new URLSearchParams(window.location.search);
+      const startDate = urlParams.get('startDate');
+      const endDate = urlParams.get('endDate');
+      if (startDate && endDate) {
+        document.getElementById('startDateFilter').value = startDate;
+        document.getElementById('endDateFilter').value = endDate;
+      } else {
+        selectElement.value = 'all';
+      }
+    }
+    const filterSessions = () => {
+      const startDate = document.getElementById('startDateFilter').value;
+      const endDate = document.getElementById('endDateFilter').value;
+      console.log(startDate, typeof startDate, endDate);
+      window.location.href = `./?startDate=${startDate}&endDate=${endDate}`;
+    };
   </script>
 </body>
 </html>

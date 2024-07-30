@@ -24,6 +24,10 @@ router.get("/", (req, res) => {
   const results = [];
   const files = readResultsFiles();
   const userLapCountsMap = {};
+  const dateList = [];
+
+  let startDate = req && req.query && req.query.startDate;
+  let endDate = req && req.query && req.query.endDate;
 
   files.forEach((file) => {
     // 如果file不是json文件，则跳过
@@ -39,6 +43,44 @@ router.get("/", (req, res) => {
     const minute = time.slice(2, 4);
     const second = time.slice(4, 6);
     const sessionType = session.split(".")[0];
+
+    let thedate = {
+      year: '20' + year,
+      month,
+      day
+    }
+    if (!dateList.find(n => n.year === thedate.year && n.month === thedate.month && n.day === thedate.day)) {
+      dateList.push(thedate);
+    }
+
+    // 这里加上条件限制
+    // 第一种，如果startDate和endDate都存在，那么只显示在这个时间范围内的数据
+    let dateParseInt = parseInt('20'+year + month + day);
+    let parseStartDate = startDate ? parseInt(startDate.split('-').join('')) : 0;
+    let parseEndDate = endDate ? parseInt(endDate.split('-').join('')) : 0;
+    if (!startDate) {
+      startDate = 'all';
+    }
+    if (!endDate) {
+      endDate = 'all';
+    }
+    // 如果startDate和endDate都存在
+    if (startDate != 'all' && endDate != 'all') {
+      if (dateParseInt < parseStartDate || dateParseInt > parseEndDate) {
+        return;
+      }
+    }
+    if (startDate != 'all' && endDate == 'all') {
+      if (dateParseInt < parseStartDate) {
+        return;
+      }
+    }
+    if (startDate == 'all' && endDate != 'all') {
+      if (dateParseInt > parseEndDate) {
+        return;
+      }
+    }
+
     // 读取文件内容
     var filePath = path.join(results_path, file);
     const contentBuffer = fs.readFileSync(filePath);
@@ -222,7 +264,9 @@ router.get("/", (req, res) => {
   // res.send(rankList);
   res.render("index", {
     data: rankList,
+    dateList: dateList,
     serverName: serverNameString,
+    filesLimit: filesLimit
   });
   logger.info(
     `get http://localhost:${port}/ ${new Date().getTime() - countStartMs}ms`
@@ -252,7 +296,7 @@ router.get("/results/", (req, res) => {
           }),
           totalTime: formatLapTimeToString(line.driverTotalTimes),
           totalTimeNumber: Math.floor(line.driverTotalTimes),
-          laps: line.timing.lapCount,
+          laps: line.timing.lapCount
         };
       }
     );
@@ -330,6 +374,7 @@ router.get("/results/", (req, res) => {
   // res.send(results);
   res.render("results", {
     data: results,
+    filesLimit: filesLimit
   });
 });
 
