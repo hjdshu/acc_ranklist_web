@@ -1,6 +1,7 @@
 ## Introduction
-`acc_ranklist_web` is a simple web server that displays your ACC server's best lap rankings by different tracks.
+`acc_ranklist_web` is a simple web server that displays your ACC server's best lap rankings by different tracks. It also supports viewing race results rankings for individual events.
 ![example](example.png)
+![example2](example2.png)
 
 ## Dev
 ```
