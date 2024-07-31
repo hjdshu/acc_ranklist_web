@@ -34,10 +34,20 @@ th {
 }
 .filter-container {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 .filter-container select,
 .filter-container input {
   padding: 5px;
   margin: 0 5px;
+}
+.resultItem {
+  margin: 0 0 30px;
+  padding: 20px;
+  border: 1px solid #d3d2d2;
+  border-radius: 10px;
+}
+.trackname{
+  font-size: 16px;
+  margin-bottom: 20px;
 }

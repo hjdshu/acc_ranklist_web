@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="./../public.css" />
   <link rel="stylesheet" href="./../result.css" />
-  <title>Session Data</title>
+  <title>ACC Session Data</title>
   <style>
     h1 {
       text-align: center;
@@ -31,23 +31,30 @@
     }
     .filter-container {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
     .filter-container select,
     .filter-container input {
       padding: 5px;
       margin: 0 5px;
     }
+    .resultItem {
+      margin: 0 0 30px;
+      padding: 20px;
+      border: 1px solid #d3d2d2;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
+  <a class="logo" href="./"><%= serverName %></a>
   <div class="container">
     <div class="nav">
       <a href="/" class="home">Home</a>
       <a href="/results/">Results</a>
       <a href="/about.html" class="about">About</a>
     </div>
-    <h1 class="h1"><a href="../results/">ACC Server Session Data</a></h1>
+    <h1 class="h1"><a href="../results/">Session Data</a></h1>
     <div class="filter-container">
       <label for="sessionTypeFilter">Filter by session type: </label>
       <select id="sessionTypeFilter" onchange="filterSessions()">
@@ -78,10 +85,11 @@
         data-track-name="<%= session.trackName %>"
         data-date="<%= session.dateTime %>"
       >
-        <p class="date">Date: <%= session.dateTime %></p>
         <h2>
-          Track: <b><%= session.trackName.toUpperCase() %></b> - Session: <%=
-          session.sessionType %>
+          <span class="date">Date: </span><%= session.dateTime %>&nbsp;&nbsp;
+          <b>Track: </b><%= session.trackName.toUpperCase() %>&nbsp;&nbsp;
+          <b>Session: </b><%= session.sessionType %>
+           %>
         </h2>
         <table>
           <thead>

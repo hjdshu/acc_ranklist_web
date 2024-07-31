@@ -15,7 +15,12 @@ const server_path = config.server_path;
 const port = config.port;
 const results_path = path.join(server_path, "results");
 const filesLimit = config.files_limit || 10000;
-const logger = pino(pretty());
+const logger = pino(pretty(
+  {
+    colorize: true,
+    translateTime: "yyyy-mm-dd HH:MM:ss",
+  }
+));
 const globalEnum = require("../enum.js");
 const router = express.Router();
 
@@ -274,6 +279,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/results/", (req, res) => {
+  const countStartMs = new Date().getTime();
   const files = readResultsFiles();
   const results = [];
   files.forEach((file) => {
@@ -374,8 +380,12 @@ router.get("/results/", (req, res) => {
   // res.send(results);
   res.render("results", {
     data: results,
-    filesLimit: filesLimit
+    filesLimit: filesLimit,
+    serverName: serverNameString,
   });
+  logger.info(
+    `get http://localhost:${port}/result ${new Date().getTime() - countStartMs}ms`
+  );
 });
 
 function formatLapTimeToString(lapTimeFloor, isHour = false) {

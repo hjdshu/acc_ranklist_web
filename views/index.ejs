@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" href="./public.css">
   <link rel="stylesheet" href="./style.css">
-  <title>Lap Times Leaderboard</title>
+  <title>ACC Lap Times Leaderboard</title>
 </head>
 <body>
+  <a class="logo" href="./"><%= serverName %></a>
+  
   <div class="nav">
     <a href="./" class="home">Home</a>
     <a href="./results/">Results</a>
     <a href="./about.html" class="about">About</a>
   </div>
   
-  <h1 class="h1"><a href="./"><%= serverName %>ACC Server Lap Leaderboard</a></h1>
+  <h1 class="h1"><a href="./">Lap Leaderboard</a></h1>
   <div class="filter-container">
     <label for="trackSelect">Select Track: </label>
     <select id="trackSelect">
@@ -33,11 +35,9 @@
     </select>
     <span>filesLimit: <%= filesLimit %></span>
   </div>
-  <br>
-  
   <% data.forEach(trackData => { %>
-    <div class="trackData" data-track="<%= trackData.track %>">
-      <h2>Track: <%= trackData.track.toUpperCase() %></h2>
+    <div class="trackData resultItem" data-track="<%= trackData.track %>">
+      <div class="trackname"><b>Track:</b> <%= trackData.track.toUpperCase() %></div>
       <table>
         <thead>
           <tr>
