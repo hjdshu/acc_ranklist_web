@@ -15,5 +15,4 @@ const build = () => {
     const newConfigPath = path.join(__dirname, 'dist', 'config.yaml');
     fs.copyFileSync(configPath, newConfigPath);
 }
-
 build();

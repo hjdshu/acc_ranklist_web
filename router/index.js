@@ -1,5 +1,5 @@
-// 首先配置results的文件夹路径
-// 读取根目录下的config.yaml文件
+// First, configure the path to the results folder
+// Read the config.yaml file in the root directory
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -9,7 +9,7 @@ const pino = require("pino");
 const pretty = require("pino-pretty");
 const configPath = path.join(process.cwd(), "./config.yaml");
 const config = yaml.load(fs.readFileSync(configPath, "utf8"));
-// 读取config下的server_path
+// Read the server_path from the config
 const serverNameString = config.server_name;
 const server_path = config.server_path;
 const port = config.port;
@@ -18,7 +18,7 @@ const filesLimit = config.files_limit || 10000;
 const logger = pino(pretty(
   {
     colorize: true,
-    translateTime: "yyyy-mm-dd HH:MM:ss",
+    translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
   }
 ));
 const globalEnum = require("../enum.js");
@@ -35,20 +35,21 @@ router.get("/", (req, res) => {
   let endDate = req && req.query && req.query.endDate;
 
   files.forEach((file) => {
-    // 如果file不是json文件，则跳过
     if (!file.endsWith(".json")) {
       return;
     }
-    // 从file文件中解析出日期
-    const [date, time, session] = file.split("_");
-    const year = date.slice(0, 2);
-    const month = date.slice(2, 4);
-    const day = date.slice(4, 6);
-    const hour = time.slice(0, 2);
-    const minute = time.slice(2, 4);
-    const second = time.slice(4, 6);
-    const sessionType = session.split(".")[0];
-
+    try {
+      var [date, time, session] = file.split("_");
+      var year = date.slice(0, 2);
+      var month = date.slice(2, 4);
+      var day = date.slice(4, 6);
+      var hour = time.slice(0, 2);
+      var minute = time.slice(2, 4);
+      var second = time.slice(4, 6);
+      var sessionType = session.split(".")[0];
+    } catch (error) {
+      return;
+    }
     let thedate = {
       year: '20' + year,
       month,
@@ -58,8 +59,8 @@ router.get("/", (req, res) => {
       dateList.push(thedate);
     }
 
-    // 这里加上条件限制
-    // 第一种，如果startDate和endDate都存在，那么只显示在这个时间范围内的数据
+    // Apply conditions to limit the data
+    // First case: If both startDate and endDate exist, only show data within that time range
     let dateParseInt = parseInt('20'+year + month + day);
     let parseStartDate = startDate ? parseInt(startDate.split('-').join('')) : 0;
     let parseEndDate = endDate ? parseInt(endDate.split('-').join('')) : 0;
@@ -69,7 +70,7 @@ router.get("/", (req, res) => {
     if (!endDate) {
       endDate = 'all';
     }
-    // 如果startDate和endDate都存在
+    // If both startDate and endDate exist
     if (startDate != 'all' && endDate != 'all') {
       if (dateParseInt < parseStartDate || dateParseInt > parseEndDate) {
         return;
@@ -85,17 +86,13 @@ router.get("/", (req, res) => {
         return;
       }
     }
-
-    // 读取文件内容
-    var filePath = path.join(results_path, file);
-    const contentBuffer = fs.readFileSync(filePath);
-    let content = contentBuffer.toString("utf16le");
-    if (content.charCodeAt(0) === 0xfeff) {
-      content = content.slice(1);
+    
+    var { jsonObject } = readJsonFile(file);;
+    if (!jsonObject.sessionResult || !jsonObject.laps || !jsonObject.sessionResult.leaderBoardLines) {
+      return;
     }
-    const jsonObject = JSON.parse(content);
 
-    // 先找出车id，车型，当前车手
+    // find out the car ID, car model, and current driver
     let leaderBoardLines = jsonObject.sessionResult.leaderBoardLines;
     leaderBoardLines = leaderBoardLines.map((line) => {
       return {
@@ -109,7 +106,7 @@ router.get("/", (req, res) => {
     });
 
     let laps = jsonObject.laps;
-    // 记录每个人在这个track上的圈数
+    // Record the number of laps each driver has on this track
     laps.forEach((lap) => {
       let playerId = leaderBoardLines.find(
         (n) => n.carId === lap.carId
@@ -120,9 +117,9 @@ router.get("/", (req, res) => {
       }
       userLapCountsMap[playerId + "-" + track] += 1;
     });
-    // 过滤掉无效的lap
+   
     laps = laps.filter((n) => n.isValidForBest);
-    // 给laps加上playerFullName, carName, carId, driverName, playerId
+    // add playerFullName, carName, carId, driverName, playerId to laps
     laps = laps.map((m) => {
       return {
         lapTimeString: formatLapTimeToString(m.laptime),
@@ -146,13 +143,12 @@ router.get("/", (req, res) => {
         }),
       };
     });
-    // 按照laptime进行排序
     laps = laps.sort((a, b) => {
       return a.laptime - b.laptime;
     });
 
     const personalBestLap = [];
-    // 将这个laps的结果重组，只取每个人的最好成绩
+    // Restructure the laps results, taking only the best performance of each driver
     const personalBestLapMap = {};
     laps.forEach((lap) => {
       if (!personalBestLapMap[lap.playerId]) {
@@ -168,7 +164,6 @@ router.get("/", (req, res) => {
     for (const key in personalBestLapMap) {
       personalBestLap.push(personalBestLapMap[key]);
     }
-    // 如果laps不为空，就把这个结果加入到results里面
     if (laps.length != 0) {
       results.push({
         dateTime: `20${year}-${month}-${day} ${hour}:${minute}:${second}`,
@@ -178,9 +173,8 @@ router.get("/", (req, res) => {
       });
     }
   });
-  // 返回json数据
-  // 这里要对results里面的lap进行排序
-  // 首先根据track进行分组和合并
+  // Sort the laps in the results array
+  // First, group and merge by track
   const trackBestMap = {};
   const trackMap = {};
   results.forEach((result) => {
@@ -189,11 +183,9 @@ router.get("/", (req, res) => {
       trackBestMap[result.track] = [];
     }
     trackMap[result.track] = trackMap[result.track].concat(result.laps);
-    // 然后对这个trackMap里面的lap进行排序
     trackMap[result.track] = trackMap[result.track].sort((a, b) => {
       return a.laptime - b.laptime;
     });
-    // 然后把这个trackMap里面的lap进行重组，只取每个人的最好成绩
     const personalBestLapMap = {};
     trackMap[result.track].forEach((lap) => {
       if (!personalBestLapMap[lap.playerId]) {
@@ -211,7 +203,8 @@ router.get("/", (req, res) => {
     trackMap[result.track] = trackMap[result.track];
     trackBestMap[result.track] = personalBestLap;
   });
-  // 对每一条赛道的成绩进行s1，s2，s3的排序
+
+  // Sort the s1, s2, s3 times for each track result
   for (const key in trackBestMap) {
     const track = trackBestMap[key];
     let s1BestLap = 0;
@@ -286,7 +279,15 @@ router.get("/results/", (req, res) => {
     if (!file.endsWith(".json")) {
       return;
     }
-    const { dateTime, sessionType, jsonObject } = redJsonFile(file);
+    try {
+      var { dateTime, sessionType, jsonObject } = readJsonFile(file);
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+    if (!jsonObject || !jsonObject.sessionResult || !jsonObject.sessionResult.leaderBoardLines) {
+      return;
+    }
     let currentDriver = jsonObject.sessionResult.leaderBoardLines.map(
       (line, index) => {
         return {
@@ -331,7 +332,7 @@ router.get("/results/", (req, res) => {
     }
   });
   results.forEach((track) => {
-    // 需要把result里面bestLap和bestSplitsString进行排序
+    // Need to sort bestLap and bestSplitsString within the result
     let s1BestLap = 0;
     let s1BestIndex = -1;
     let s2BestLap = 0;
@@ -392,7 +393,7 @@ function formatLapTimeToString(lapTimeFloor, isHour = false) {
   const laptime = Math.floor(lapTimeFloor);
   // laptime is in milliseconds
   const milliseconds = laptime % 1000;
-  // milliseconds不足三位的时候，前面补0
+  // milliseconds not less than 3 digits，then add 0
   const millisecondsString =
     milliseconds < 10
       ? `00${milliseconds}`
@@ -400,7 +401,7 @@ function formatLapTimeToString(lapTimeFloor, isHour = false) {
       ? `0${milliseconds}`
       : `${milliseconds}`;
   const seconds = Math.floor(laptime / 1000) % 60;
-  // seconds不足两位的时候，前面补0
+  // seconds not less than 2 digits，then add 0
   const secondsString = seconds < 10 ? `0${seconds}` : `${seconds}`;
   if (!isHour) {
     const minutes = Math.floor(laptime / 60000);
@@ -414,10 +415,8 @@ function formatLapTimeToString(lapTimeFloor, isHour = false) {
 
 // 批量读取文件
 function readResultsFiles() {
-  // 使用同步读取
   let files = fs.readdirSync(results_path);
-  // 这里循环读取所有的files
-  // 这里要对files里面的file进行排序，按照时间排序
+  // then to be sorted by time
   files.sort((a, b) => {
     // a和b是两个文件名, 240712_142723_Q.json
     // 240712_142723_Q
@@ -451,7 +450,7 @@ function readResultsFiles() {
   return files;
 }
 
-function redJsonFile(file) {
+function readJsonFile(file) {
   const [date, time, session] = file.split("_");
   const year = date.slice(0, 2);
   const month = date.slice(2, 4);
@@ -460,7 +459,6 @@ function redJsonFile(file) {
   const minute = time.slice(2, 4);
   const second = time.slice(4, 6);
   const sessionType = session.split(".")[0];
-  // 读取文件内容
   var filePath = path.join(results_path, file);
   const contentBuffer = fs.readFileSync(filePath);
   let content = contentBuffer.toString("utf16le");
