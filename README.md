@@ -7,6 +7,8 @@
 ```
 npm install
 node app.js
+//if u installed nodemon
+nodemon app.js
 ```
 ## Build 
 npm run build

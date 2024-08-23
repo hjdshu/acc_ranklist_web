@@ -301,8 +301,8 @@ router.get("/results/", (req, res) => {
           bestSplitsString: line.timing.bestSplits.map((split) => {
             return formatLapTimeToString(split);
           }),
-          totalTime: formatLapTimeToString(line.driverTotalTimes),
-          totalTimeNumber: Math.floor(line.driverTotalTimes),
+          totalTime: formatLapTimeToString(line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime),
+          totalTimeNumber: Math.floor(line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime),
           laps: line.timing.lapCount
         };
       }

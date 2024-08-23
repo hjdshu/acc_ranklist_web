@@ -1,6 +1,6 @@
 {
   "name": "acc_ranklist_web",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "",
   "main": "src/app.js",
   "scripts": {
