@@ -1,6 +1,6 @@
 {
   "name": "acc_ranklist_web",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "",
   "main": "src/app.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chokidar": "^3.6.0",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "js-yaml": "^4.1.0",
