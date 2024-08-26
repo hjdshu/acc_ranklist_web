@@ -49,6 +49,7 @@ app.listen(port, () => {
     if (!initialScanDone) {
       return;
     }
+    logger.info(`File change detected: ${event} ${filePath}`);
     http.get('http://127.0.0.1:' + port);
   });
 });
