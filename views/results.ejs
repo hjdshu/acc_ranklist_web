@@ -130,10 +130,10 @@
               <td><%= driver.gapTime %></td>
               <td><%= driver.laps %></td>
               <% } %>
-              <td <% if (index == 0) { %>class="best"<% } %> ><%= driver.bestLap %></td>
-              <td <% if (driver.s1Best == true) { %>class="best"<% } %> ><%= driver.bestLap != '--' ? driver.bestSplitsString[0]: '--' %></td>
-              <td <% if (driver.s2Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[1]: '--' %></td>
-              <td <% if (driver.s3Best == true) { %>class="best"<% } %>><%= driver.bestLap != '--' ? driver.bestSplitsString[2]: '--' %></td>
+              <td <% if (driver.best == true) { %>class="best"<% } %> ><%= driver.bestLap %></td>
+              <td <% if (driver.s1Best == true) { %>class="best"<% } %> ><%= driver.bestSplitsString[0] %></td>
+              <td <% if (driver.s2Best == true) { %>class="best"<% } %>><%= driver.bestSplitsString[1] %></td>
+              <td <% if (driver.s3Best == true) { %>class="best"<% } %>><%= driver.bestSplitsString[2] %></td>
             </tr>
             <% }) %>
           </tbody>

@@ -24,13 +24,10 @@ const logger = pino(
 const globalEnum = require("../enum.js");
 const router = express.Router();
 
-var readFileTotalTime = 0;
-
 router.get("/", async (req, res) => {
   const countStartMs = new Date().getTime();
   const results = [];
   const files = readResultsFiles();
-  const userLapCountsMap = {};
   const dateList = [];
 
   let startDate = req && req.query && req.query.startDate;
@@ -40,6 +37,7 @@ router.get("/", async (req, res) => {
 
   const readFilesAndCalculatePromises = files.map((file) => {
     return (async () => {
+      const userLapCountsMap = {};
       if (!file.endsWith(".json")) {
         return;
       }
@@ -127,11 +125,11 @@ router.get("/", async (req, res) => {
         let playerId = leaderBoardLines.find(
           (n) => n.carId === lap.carId
         ).palyerId;
-        let track = jsonObject.trackName;
-        if (!userLapCountsMap[playerId + "-" + track]) {
-          userLapCountsMap[playerId + "-" + track] = 0;
+        if (!userLapCountsMap[playerId]) {
+          userLapCountsMap[playerId] = 1;
+        } else {
+          userLapCountsMap[playerId] += 1;
         }
-        userLapCountsMap[playerId + "-" + track] += 1;
       });
 
       laps = laps.filter((n) => n.isValidForBest);
@@ -175,7 +173,7 @@ router.get("/", async (req, res) => {
           }
         }
         personalBestLapMap[lap.playerId].lapCount =
-          userLapCountsMap[lap.playerId + "-" + lap.track];
+          userLapCountsMap[lap.playerId];
       });
       for (const key in personalBestLapMap) {
         personalBestLap.push(personalBestLapMap[key]);
@@ -193,201 +191,76 @@ router.get("/", async (req, res) => {
 
   await Promise.all(readFilesAndCalculatePromises);
 
-  // files.forEach((file) => {
-  //   if (!file.endsWith(".json")) {
-  //     return;
-  //   }
-  //   try {
-  //     var [date, time, session] = file.split("_");
-  //     var year = date.slice(0, 2);
-  //     var month = date.slice(2, 4);
-  //     var day = date.slice(4, 6);
-  //     var hour = time.slice(0, 2);
-  //     var minute = time.slice(2, 4);
-  //     var second = time.slice(4, 6);
-  //     var sessionType = session.split(".")[0];
-  //   } catch (error) {
-  //     return;
-  //   }
-  //   let thedate = {
-  //     year: "20" + year,
-  //     month,
-  //     day,
-  //   };
-  //   if (
-  //     !dateList.find(
-  //       (n) =>
-  //         n.year === thedate.year &&
-  //         n.month === thedate.month &&
-  //         n.day === thedate.day
-  //     )
-  //   ) {
-  //     dateList.push(thedate);
-  //   }
+  logger.info(`get40-197line: ${new Date().getTime() - startForEachTime}ms`);
 
-  //   // Apply conditions to limit the data
-  //   // First case: If both startDate and endDate exist, only show data within that time range
-  //   let dateParseInt = parseInt("20" + year + month + day);
-  //   let parseStartDate = startDate
-  //     ? parseInt(startDate.split("-").join(""))
-  //     : 0;
-  //   let parseEndDate = endDate ? parseInt(endDate.split("-").join("")) : 0;
-  //   if (!startDate) {
-  //     startDate = "all";
-  //   }
-  //   if (!endDate) {
-  //     endDate = "all";
-  //   }
-  //   // If both startDate and endDate exist
-  //   if (startDate != "all" && endDate != "all") {
-  //     if (dateParseInt < parseStartDate || dateParseInt > parseEndDate) {
-  //       return;
-  //     }
-  //   }
-  //   if (startDate != "all" && endDate == "all") {
-  //     if (dateParseInt < parseStartDate) {
-  //       return;
-  //     }
-  //   }
-  //   if (startDate == "all" && endDate != "all") {
-  //     if (dateParseInt > parseEndDate) {
-  //       return;
-  //     }
-  //   }
+  // results
+  /**
+   * 
+   * {
+   *     dateTime: '2020-11-01 10:00:00',
+   *     track: 'Nurburgring',
+   *     personalBestLap: [
+   *        {
+   *            laptime: 115715,
+   *            splits: [40827, 38572, 36315],
+   *            lapCount: 1,
+   *            playerId: 'S76561198877062712'
+   *        }
+   *    ] 
+   * }
+   * 
+   */
 
-  //   var { jsonObject } = readJsonFile(file);
-  //   if (
-  //     !jsonObject.sessionResult ||
-  //     !jsonObject.laps ||
-  //     !jsonObject.sessionResult.leaderBoardLines
-  //   ) {
-  //     return;
-  //   }
-
-  //   // find out the car ID, car model, and current driver
-  //   let leaderBoardLines = jsonObject.sessionResult.leaderBoardLines;
-  //   leaderBoardLines = leaderBoardLines.map((line) => {
-  //     return {
-  //       carId: line.car.carId,
-  //       carModel: line.car.carModel,
-  //       currentDriverName: line.currentDriver.shortName,
-  //       palyerId: line.currentDriver.playerId,
-  //       playerFullName:
-  //         line.currentDriver.firstName + " " + line.currentDriver.lastName,
-  //     };
-  //   });
-
-  //   let laps = jsonObject.laps;
-  //   // Record the number of laps each driver has on this track
-  //   laps.forEach((lap) => {
-  //     let playerId = leaderBoardLines.find(
-  //       (n) => n.carId === lap.carId
-  //     ).palyerId;
-  //     let track = jsonObject.trackName;
-  //     if (!userLapCountsMap[playerId + "-" + track]) {
-  //       userLapCountsMap[playerId + "-" + track] = 0;
-  //     }
-  //     userLapCountsMap[playerId + "-" + track] += 1;
-  //   });
-
-  //   laps = laps.filter((n) => n.isValidForBest);
-  //   // add playerFullName, carName, carId, driverName, playerId to laps
-  //   laps = laps.map((m) => {
-  //     return {
-  //       lapTimeString: formatLapTimeToString(m.laptime),
-  //       playerFullName: leaderBoardLines.find((n) => n.carId === m.carId)
-  //         .playerFullName,
-  //       carName:
-  //         globalEnum.cars[
-  //           leaderBoardLines.find((n) => n.carId === m.carId).carModel
-  //         ],
-  //       carId: m.carId,
-  //       driverName: leaderBoardLines.find((n) => n.carId === m.carId)
-  //         .currentDriverName,
-  //       playerId: leaderBoardLines.find((n) => n.carId === m.carId).palyerId,
-  //       laptime: m.laptime,
-  //       splits: m.splits,
-  //       sessionType: sessionType,
-  //       dateTime: `20${year}-${month}-${day} ${hour}:${minute}:${second}`,
-  //       track: jsonObject.trackName,
-  //       splitsString: m.splits.map((split) => {
-  //         return formatLapTimeToString(split);
-  //       }),
-  //     };
-  //   });
-  //   laps = laps.sort((a, b) => {
-  //     return a.laptime - b.laptime;
-  //   });
-
-  //   const personalBestLap = [];
-  //   // Restructure the laps results, taking only the best performance of each driver
-  //   const personalBestLapMap = {};
-  //   laps.forEach((lap) => {
-  //     if (!personalBestLapMap[lap.playerId]) {
-  //       personalBestLapMap[lap.playerId] = lap;
-  //     } else {
-  //       if (lap.laptime < personalBestLapMap[lap.playerId].laptime) {
-  //         personalBestLapMap[lap.playerId] = lap;
-  //       }
-  //     }
-  //     personalBestLapMap[lap.playerId].lapCount =
-  //       userLapCountsMap[lap.playerId + "-" + lap.track];
-  //   });
-  //   for (const key in personalBestLapMap) {
-  //     personalBestLap.push(personalBestLapMap[key]);
-  //   }
-  //   if (laps.length != 0) {
-  //     results.push({
-  //       dateTime: `20${year}-${month}-${day} ${hour}:${minute}:${second}`,
-  //       laps: laps,
-  //       track: jsonObject.trackName,
-  //       personalBestLap: personalBestLap,
-  //     });
-  //   }
-  // });
-  logger.info(`get37-177line: ${new Date().getTime() - startForEachTime}ms`);
-
-  // var startSortBestTime = new Date().getTime();
-  // Sort the laps in the results array
-  // First, group and merge by track
-  const trackBestMap = {};
-  const trackMap = {};
+  // 分组合并
+  const groups = []
   results.forEach((result) => {
-    if (!trackMap[result.track]) {
-      trackMap[result.track] = [];
-      trackBestMap[result.track] = [];
+    const track = result.track
+    if (!groups.find((group) => group.track === track)) {
+      groups.push({
+        track: track,
+        personalBestLap: []
+      })
     }
-    trackMap[result.track] = trackMap[result.track].concat(result.laps);
-    trackMap[result.track] = trackMap[result.track].sort((a, b) => {
-      return a.laptime - b.laptime;
-    });
-    const personalBestLapMap = {};
-    trackMap[result.track].forEach((lap) => {
+    var group = groups.find((group) => group.track === track)
+    group.personalBestLap = group.personalBestLap.concat(result.personalBestLap)
+  })
+
+  // 排序
+  groups.forEach((group) => {
+    // 先把每个组里的重复的个人最好成绩取出来，不好的成绩去掉
+    const personalBestLapMap = {}
+    group.personalBestLap.forEach((lap) => {
       if (!personalBestLapMap[lap.playerId]) {
-        personalBestLapMap[lap.playerId] = lap;
+        personalBestLapMap[lap.playerId] = lap
       } else {
         if (lap.laptime < personalBestLapMap[lap.playerId].laptime) {
-          personalBestLapMap[lap.playerId] = lap;
+          personalBestLapMap[lap.playerId] = {
+            ...lap,
+            lapCount: personalBestLapMap[lap.playerId].lapCount + lap.lapCount
+          }
+        } else {
+          personalBestLapMap[lap.playerId].lapCount += lap.lapCount
         }
       }
-    });
-    const personalBestLap = [];
+    })
+    group.personalBestLap = []
     for (const key in personalBestLapMap) {
-      personalBestLap.push(personalBestLapMap[key]);
+      group.personalBestLap.push(personalBestLapMap[key])
     }
-    trackMap[result.track] = trackMap[result.track];
-    trackBestMap[result.track] = personalBestLap;
-  });
-  // logger.info(`get179-210line: ${new Date().getTime() - startSortBestTime}ms`);
+    group.personalBestLap = group.personalBestLap.sort((a, b) => {
+      return a.laptime - b.laptime
+    })
+  })
+
   // Sort the s1, s2, s3 times for each track result
-  for (const key in trackBestMap) {
-    const track = trackBestMap[key];
+  groups.forEach((group) => {
     let s1BestLap = 0;
     let s1BestIndex = -1;
     let s2BestLap = 0;
     let s2BestIndex = -1;
     let s3BestLap = 0;
     let s3BestIndex = -1;
+    const track = group.personalBestLap;
     track.forEach((lap, index) => {
       if (!s1BestLap) {
         s1BestLap = lap.splits[0];
@@ -426,98 +299,93 @@ router.get("/", async (req, res) => {
         }
       }
     });
-  }
-  const rankList = [];
-  for (const key in trackMap) {
-    rankList.push({
-      track: key,
-      personalBestLap: trackBestMap[key],
-    });
-  }
-  // res.send(rankList);
+  })
   res.render("index", {
-    data: rankList,
+    data: groups,
     dateList: dateList,
     serverName: serverNameString,
     filesLimit: filesLimit,
   });
-  logger.info(`readFileTotalTime: ${readFileTotalTime}ms`);
-  readFileTotalTime = 0;
   logger.info(
     `get http://localhost:${port}/ ${new Date().getTime() - countStartMs}ms`
   );
 });
 
-router.get("/results/", (req, res) => {
+router.get("/results/", async (req, res) => {
   const countStartMs = new Date().getTime();
   const files = readResultsFiles();
   const results = [];
-  files.forEach((file) => {
-    if (!file.endsWith(".json")) {
-      return;
-    }
-    try {
-      var { dateTime, sessionType, jsonObject } = readJsonFile(file);
-    } catch (error) {
-      console.log(error);
-      return;
-    }
-    if (
-      !jsonObject ||
-      !jsonObject.sessionResult ||
-      !jsonObject.sessionResult.leaderBoardLines
-    ) {
-      return;
-    }
-    let currentDriver = jsonObject.sessionResult.leaderBoardLines.map(
-      (line, index) => {
-        return {
-          ...line.currentDriver,
-          rank: index + 1,
-          bestLap:
-            line.timing.bestLap !== 2147483647
-              ? formatLapTimeToString(line.timing.bestLap)
-              : "--",
-          bestSplits: line.timing.bestSplits,
-          bestSplitsString: line.timing.bestSplits.map((split) => {
-            return formatLapTimeToString(split);
-          }),
-          totalTime: formatLapTimeToString(
-            line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime
-          ),
-          totalTimeNumber: Math.floor(
-            line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime
-          ),
-          laps: line.timing.lapCount,
-        };
+  const readFilesPromises = files.map((file) => {
+    return (async() => {
+      if (!file.endsWith(".json")) {
+        return;
       }
-    );
-    if (currentDriver.length) {
-      let first = currentDriver[0];
-      let firstLaps = first.laps;
-      let firstTotalTime = first.totalTimeNumber;
-      currentDriver = currentDriver.map((driver) => {
-        return {
-          ...driver,
-          gapTime:
-            driver.laps == firstLaps
-              ? "+" +
-                formatLapTimeToString(driver.totalTimeNumber - firstTotalTime)
-              : "+" + (firstLaps - driver.laps) + " Lap",
-        };
-      });
-    }
-    if (currentDriver.length) {
-      results.push({
-        dateTime: dateTime,
-        sessionType: sessionType,
-        trackName: jsonObject.trackName,
-        currentDriver: currentDriver,
-      });
-    }
-  });
+      try {
+        var { dateTime, sessionType, jsonObject } = await readJsonFile(file);
+      } catch (error) {
+        console.log(error);
+        return;
+      }
+      if (
+        !jsonObject ||
+        !jsonObject.sessionResult ||
+        !jsonObject.sessionResult.leaderBoardLines
+      ) {
+        return;
+      }
+      let currentDriver = jsonObject.sessionResult.leaderBoardLines.map(
+        (line, index) => {
+          return {
+            ...line.currentDriver,
+            rank: index + 1,
+            bestLap:
+              line.timing.bestLap !== 2147483647
+                ? formatLapTimeToString(line.timing.bestLap)
+                : "--",
+            bestSplits: line.timing.bestSplits,
+            bestSplitsString: line.timing.bestSplits.map((split) => {
+              return split === 2147483647 ? "--" : formatLapTimeToString(split);
+            }),
+            totalTime: formatLapTimeToString(
+              line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime
+            ),
+            totalTimeNumber: Math.floor(
+              line.timing.totalTime == 2147483647 ? 0 : line.timing.totalTime
+            ),
+            laps: line.timing.lapCount,
+          };
+        }
+      );
+      if (currentDriver.length) {
+        let first = currentDriver[0];
+        let firstLaps = first.laps;
+        let firstTotalTime = first.totalTimeNumber;
+        currentDriver = currentDriver.map((driver) => {
+          return {
+            ...driver,
+            gapTime:
+              driver.laps == firstLaps
+                ? "+" +
+                  formatLapTimeToString(driver.totalTimeNumber - firstTotalTime)
+                : "+" + (firstLaps - driver.laps) + " Lap",
+          };
+        });
+      }
+      if (currentDriver.length) {
+        results.push({
+          dateTime: dateTime,
+          sessionType: sessionType,
+          trackName: jsonObject.trackName,
+          currentDriver: currentDriver,
+        });
+      }
+    })() 
+  })
+  await Promise.all(readFilesPromises);
   results.forEach((track) => {
     // Need to sort bestLap and bestSplitsString within the result
+    let bestLap = 0;
+    let bestIndex = -1;
     let s1BestLap = 0;
     let s1BestIndex = -1;
     let s2BestLap = 0;
@@ -525,6 +393,20 @@ router.get("/results/", (req, res) => {
     let s3BestLap = 0;
     let s3BestIndex = -1;
     track.currentDriver.forEach((lap, index) => {
+      if (lap.bestLap != '--') {
+        if (!bestLap) {
+          bestLap = lap.bestLap;
+          bestIndex = index;
+          lap.best = true;
+        } else {
+          if (lap.bestLap < bestLap) {
+            bestLap = lap.bestLap[0];
+            track.currentDriver[bestIndex].best = false;
+            lap.best = true;
+            bestIndex = index;
+          }
+        }
+      }
       if (!s1BestLap) {
         s1BestLap = lap.bestSplits[0];
         s1BestIndex = index;
