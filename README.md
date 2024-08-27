@@ -5,6 +5,7 @@
 
 ## Dev
 ```
+npm install -g pkg
 npm install
 node app.js
 //if u installed nodemon
