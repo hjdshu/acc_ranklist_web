@@ -484,7 +484,6 @@ function formatLapTimeToString(lapTimeFloor, isHour = false) {
 
 // 批量读取文件
 function readResultsFiles() {
-  var start_time = new Date().getTime();
   let files = fs.readdirSync(results_path);
   // then to be sorted by time
   files.sort((a, b) => {
@@ -517,10 +516,6 @@ function readResultsFiles() {
   });
   // 只取前xxx个
   files = files.slice(0, filesLimit);
-  let end_time = new Date().getTime();
-  logger.info(
-    `readResultsFiles: ${files.length} files, cost ${end_time - start_time}ms`
-  );
   return files;
 }
 
