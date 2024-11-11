@@ -1,6 +1,6 @@
 {
-  "name": "acc_ranklist_web",
-  "version": "0.1.1",
+  "name": "AccRaceBoard",
+  "version": "0.1.2",
   "description": "",
   "main": "src/app.js",
   "scripts": {
