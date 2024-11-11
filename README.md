@@ -15,7 +15,7 @@ nodemon app.js
 npm run build
 
 ## Guide
-1. Download the `AccRaceBoard.exe` and `config.yaml` from [https://github.com/hjdshu/AccRaceBoard/releases](https://github.com/hjdshu/acc_ranklist_web/releases) to your Windows server.
+1. Download the `AccRaceBoard.exe` and `config.yaml` from [https://github.com/hjdshu/AccRaceBoard/releases](https://github.com/hjdshu/AccRaceBoard/releases) to your Windows server.
 2. Edit the `config.yaml`, except for the "server_path", which should be the path to your ACC server, including a "results" folder. The `config.yaml` file's `files_limit` setting determines the maximum number of JSON files to keep in the results folder; you can set a maximum limit.
 3. Enable the "dumpLeaderboards" setting in your ACC server.
 4. Run `AccRaceBoard.exe`.
