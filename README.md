@@ -1,4 +1,5 @@
 ## Introduction
+![logo](public/images/accraceboardlogo.png)
 `AccRaceBoard` is a simple web server that displays your ACC server's best lap rankings by different tracks. It also supports viewing race results rankings for individual events.
 ![example](example.jpg)
 ![example2](example2.jpg)
